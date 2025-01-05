@@ -15,25 +15,22 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {
-        $request->authenticate();
+        $credentials = $request->only('email', 'password');
 
-        $user = Auth::user();
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken('API Token')->plainTextToken;
 
-        if (!$user) {
-            return response()->json(['message' => 'Usuario no autenticado'], 401);
-        }
-
-        $token = $user->createToken('API Token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Login exitoso',
-            'token' => $token,
-            'user' => [
+            return response()->json([
+                'message' => 'Login exitoso',
+                'token' => $token,
+                'user' => [
                 "id" => $user->id,
                 "name" => $user->name,
                 "email" => $user->email
             ]
-        ]);
+            ]);
+        }
     }
 
     /**
